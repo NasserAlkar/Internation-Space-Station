@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+      integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+      crossorigin=""
+    />
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <script
+      src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+      integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
+      crossorigin=""
+    ></script>
+
+    <style>
+      #issMap {
+        height: 500px;
+      }
+      
+    </style>
+    <title>International_Space_Station</title>
+  </head>
+  <body>
+    <h1>Where is the ISS?</h1>
+    <h4>INTERNATIONAL SPACE STATION</h4>
+    <p>
+      Latitude: <span id="lat"></span>ْ <br />
+      Longitude: <span id="lon"></span>ْ <br/>
+      Altitude: <span id="alt"></span> KM<br/>
+      Velocity: <span id="vel"></span> KM/H
+    </p>
+
+    <div id="issMap"></div>
+
+    <script>
+      //making a map n tiles
+      const mymap = L.map("issMap").setView([0, 0], 6);
+      const attribution =
+        '&copy; <a href="https:/openstreetmap.org/copytight">OpenStreetMap</a> contributors';
+
+      const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+      const tiles = L.tileLayer(tileUrl, { attribution });
+      tiles.addTo(mymap);
+
+      // making a marker with an custom icon
+      const issIcon = L.icon({
+        iconUrl: "International_Space_Station.svg.png",
+        iconSize: [50, 32],
+        iconAnchor: [25, 16]
+      });
+      const marker = L.marker([0, 0], { icon: issIcon }).addTo(mymap);
+
+      const api_url = "https://api.wheretheiss.at/v1/satellites/25544";
+
+      let firstTime = true;
+
+      async function getData() {
+        const response = await fetch(api_url);
+        const data = await response.json();
+        const { latitude, longitude, altitude, velocity } = data;
+
+        marker.setLatLng([latitude, longitude]);
+
+        if (firstTime) {
+          mymap.setView([latitude, longitude], 3);
+          firstTime = false;
+        }
+
+        document.getElementById("lat").textContent = latitude.toFixed(2);
+        document.getElementById("lon").textContent = longitude.toFixed(2);
+        document.getElementById("alt").textContent = altitude.toFixed(2);
+        if (altitude > 400) {
+          document.getElementById("alt").style.color = "green";
+        } else if (altitude < 400) {
+          document.getElementById("alt").style.color = "red";
+        }
+        document.getElementById("vel").textContent = velocity.toFixed(2);
+        if (velocity>28000) {
+          document.getElementById("vel").style.color = "green";
+        }else{
+          document.getElementById("vel").style.color = "red";
+        }
+        console.log(latitude);
+        console.log(longitude);
+      }
+
+      getData();
+
+      setInterval(getData, 1000);
+    </script>
+  </body>
+</html>
